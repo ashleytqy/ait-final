@@ -40,8 +40,9 @@ an example `Poem`:
 }
 ```
 
-## [Link to Commented First Draft Schema](db.js)
- ![first draft of Schema](wallflower/db.js)
+## First Draft Schema
+[Link to Schema](wallflower/db.js)
+
 
 
 ## Wireframes
