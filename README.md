@@ -66,7 +66,7 @@ Page for a specific `User`
     * Additional libraries: http://mzabriskie.github.io/react-draggable/example/
 * (6 points) Integrate user authentication
     * I'm going to be using passport for user authentication
-    * And account has been made for testing; I'll email you the password
+    * I'll make an account for testing and email you the password
 
 * ... for total of 12 points (more than required)
     * additional points will not count for extra credit
