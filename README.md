@@ -41,7 +41,7 @@ an example `Poem`:
 ```
 
 ## [Link to Commented First Draft Schema](db.js)
- ![first draft of Scehma](documentation/prompt-page.png)
+ ![first draft of Schema](wallflower/db.js)
 
 
 ## Wireframes
