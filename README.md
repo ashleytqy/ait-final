@@ -35,10 +35,14 @@ an example `Poem`:
 {
   user: // a reference to a User object
   prompt: //a reference to a Prompt object
-  text: "this is a poem.",
+  body: "this is a poem.",
   likes: 4
 }
 ```
+
+## [Link to Commented First Draft Schema](db.js)
+ ![first draft of Scehma](documentation/prompt-page.png)
+
 
 ## Wireframes
 
