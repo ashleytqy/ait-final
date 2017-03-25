@@ -2,12 +2,12 @@
 
 ## Overview
 
-Wallflower is a web app that will allow users to view and post poems based on a given prompt. Users can register and login. Once they're logged in, they can create a poem or view what others have written. For every list that they have, they can add items to the list or cross off items.
+Wallflower is a web app that will allow users to view and post poems based on a given prompt. Users can register and login. Once they're logged in, they can create a poem or view what others have written.
 
 
 ## Data Model
 
-I'll be storing `Prompts`, `Users` and `Poems`
+I'll be storing `Prompts`, `Users` and `Poems`.
 
 * each `Prompt` can have multiple `Poems` (via references)
 * each `User` can have multiple `Poems` (via references)
@@ -15,7 +15,7 @@ I'll be storing `Prompts`, `Users` and `Poems`
 an example `Prompt`:
 ```javascript
 {
-    name: 'write a poem with 3 rhymes',
+    title: 'write a poem with 3 rhymes',
     poems: //an array of references to Poem documents
 }
 ```
@@ -52,7 +52,7 @@ Page for a specific `User`
 ![user page](documentation/user-page.png)
 
 ## Site map
-
+![site map](documentation/site-map.png)
 
 ## User stories
 
