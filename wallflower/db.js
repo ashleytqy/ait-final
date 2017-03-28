@@ -10,7 +10,7 @@ const PoemSchema = new Schema({
 });
 
 const PromptSchema = new Schema({
-    title: {type: gString, default: '', trim: true},
+    title: {type: String, default: '', trim: true},
     poems: [PoemSchema]
 });
 
