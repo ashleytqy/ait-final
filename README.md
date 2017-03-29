@@ -68,8 +68,8 @@ Page for a specific `User`
 
 ## Research Topics
 * (3 points) Client-side JavaScript library
-    * [Interact.js](http://interactjs.io/)
-    * Allow `poems` to be draggable
+    * [Quill.js](https://quilljs.com/) as the text editor for users to submit poems
+    * [Interact.js](http://interactjs.io/) to allow poems to be draggable (tentative...)    
 * (2 points) CSS Framework
     * [Tachyons](http://tachyons.io/)
 * (6 points) Integrate user authentication
