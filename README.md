@@ -67,11 +67,32 @@ Page for a specific `User`
 4. as a `User`, I can like a poem (tentative)
 
 ## Research Topics
-* (6 points) Using React.js as the View layer
-    * Additional libraries: http://mzabriskie.github.io/react-draggable/example/
+* (3 points) Client-side JavaScript library
+    * [Interact.js](http://interactjs.io/)
+    * Allow `poems` to be draggable
+* (2 points) CSS Framework
+    * [Tachyons](http://tachyons.io/)
 * (6 points) Integrate user authentication
     * I'm going to be using passport for user authentication
     * I'll make an account for testing and email you the password
-
-* ... for total of 12 points (more than required)
+* (3 points) Unit testing with JavaScript
+    * Mocha
+    * Chai (Assert)
+* ... for total of 14 points (more than required)
     * additional points will not count for extra credit
+
+
+## Project Requirements
+* (15 points) minimum 3 x forms or ajax interactions (excluding login)
+* (6 points) minimum 3 x any of the following (can be the same):
+    * use `filter` to filter poems with most comments
+    * use `filter` to filter poems with most likes
+    * use `filter` to filter users with most poems
+* (2 points) minimum 2 x mongoose schemas
+* (9 points) stability / security
+    * simple validation on user input to prevent application from crashing
+    * doesn't allow user input to be displayed unescaped directly on page
+    * pages that require authentication cannot be accessed without authentication
+* (5 points) originality
+    * is not mostly based on existing homework
+    majority of code is not from online tutorial

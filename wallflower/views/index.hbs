@@ -1,2 +1,7 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<div class="pa3 pa5-ns">
+    <ul class="list pl0 measure center">
+    {{#each prompts as |prompt|}}
+        <li class="lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30">{{prompt}}</li>
+    {{/each}}
+    </ul>
+</div>
