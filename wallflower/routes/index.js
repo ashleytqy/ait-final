@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 });
 
 /* GET login page. */
-router.get('/login', (req, res) => {
+router.get('/signin', (req, res) => {
   res.render('login', { title: 'Express' });
 });
 
@@ -20,6 +20,11 @@ router.get('/signup', (req, res) => {
 /* GET stats page. */
 router.get('/stats', (req, res) => {
   res.render('stats', { title: 'Express' });
+});
+
+/* GET stats page. */
+router.get('/create', (req, res) => {
+  res.render('create', { title: 'Express' });
 });
 
 /* GET indiivdual prompt page. */
