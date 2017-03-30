@@ -27,6 +27,12 @@ router.get('/create', (req, res) => {
   res.render('create', { title: 'Express' });
 });
 
+router.post('/create', (req, res) => {
+    console.log(req.body);
+  res.redirect('/create');
+});
+
+
 /* GET indiivdual prompt page. */
 router.get('/:prompt', (req, res) => {
     const poems = [{

@@ -8,4 +8,10 @@ $(document).ready( function() {
     placeholder: 'Write a poem!',
     theme: 'snow'
   });
+
+
+  $("#target").click(function() {
+      console.log(quill.root.innerHTML);
+    $("#hd").val(quill.root.innerHTML);
+  });
 });
