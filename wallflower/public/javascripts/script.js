@@ -10,8 +10,7 @@ $(document).ready( function() {
   });
 
 
-  $("#target").click(function() {
-      console.log(quill.root.innerHTML);
-    $("#hd").val(quill.root.innerHTML);
+  $("#poem-form").click(function() {
+    $("#hidden-form").val(quill.root.innerHTML);
   });
 });
