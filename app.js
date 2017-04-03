@@ -56,8 +56,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use(passport.initialize());
 // app.use(passport.session());
 app.get('/:prompt/create', (req, res) => {
-  const promptName = req.params.prompt;
-  res.render('create', { title: promptName });
+  const slug = req.params.prompt;
+  Prompt.findOne({'slug': slug}, (err, prompt, count) => {
+      res.render('create', {title: prompt.title});
+  });
 });
 
 app.post('/:prompt/create', (req, res) => {
@@ -101,6 +103,40 @@ app.post('/:prompt/create', (req, res) => {
     })
 });
 
+app.get('/:prompt/:poem/delete', (req, res) => {
+    //should be /:prompt/create
+    const promptSlug = req.params.prompt;
+    const poemID = req.params.poem;
+
+    Poem.findByIdAndRemove(poemID, (err, poem) => {
+      if (!err) {
+        console.log('success!');
+      }
+    });
+
+    Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(prompt);
+        console.log('found the prompt!');
+
+        const index = prompt.poems.indexOf(poemID);
+        if (index > -1) {
+          prompt.poems.splice(index, 1);
+        }
+
+        prompt.save(err => {
+          console.log('new set of poems after deleting:');
+          console.log(prompt);
+        })
+      }
+      //show 'success' or 'failed' message
+      res.redirect('/' + promptSlug);
+    });
+
+});
+
 
 //getting the prompt page, and populating the poems that respond to that prompt
 app.get('/:prompt', (req, res) => {
@@ -119,9 +155,8 @@ app.get('/:prompt', (req, res) => {
         Prompt.findOne({'slug': promptSlug})
               .populate('poems')
               .exec((err, prompt) => {
-                console.log(prompt.poems);
-
-                res.render('prompt', { 'poems': prompt.poems});   
+                console.log(promptSlug);
+                res.render('prompt', { 'slug': promptSlug, 'title': prompt.title, 'poems': prompt.poems});   
               });
       }
     }
