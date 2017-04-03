@@ -3,7 +3,9 @@ const Schema = mongoose.Schema;
 const URLSlugs = require('mongoose-url-slugs');
 
 const PoemSchema = new Schema({
-    user: {type: String, default: '', trim: true},
+    authorID: {type: Schema.Types.ObjectId, ref: 'User'},
+    username: {type: String, default: '', trim: true}, 
+    //is username necessary?
     prompt: {},
     body: {type: String, default: '', trim: true},
     likes: {type: Number, default: 0, trim: true},
@@ -11,13 +13,13 @@ const PoemSchema = new Schema({
 
 const PromptSchema = new Schema({
     title: {type: String, default: '', trim: true},
-    poems: [PoemSchema]
+    poems: [{ type: Schema.Types.ObjectId, ref: 'Poem' }]
 });
 
 const UserSchema = new Schema({
     name: {type: String, default: '', trim: true},
     userID: {type: String, default: '', trim: true},
-    poems: [PoemSchema]
+    poems: [{ type: Schema.Types.ObjectId, ref: 'Poem' }]
 });
 
 
@@ -28,30 +30,49 @@ const Poem = mongoose.model('Poem', PoemSchema);
 const Prompt = mongoose.model('Prompt', PromptSchema);
 const User = mongoose.model('User', UserSchema);
 
-mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
+mongoose.connect('mongodb://localhost/fp');
+// mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
 
-const records = [{ id: 1, username: 'jack', password: 'secret', displayName: 'Jack', emails: [{ value: 'jack@example.com' }]},
-{ id: 2, username: 'jill', password: 'birthday', displayName: 'Jill', emails: [{ value: 'jill@example.com' }] }];
 
-exports.findById = function(id, cb) {
-  process.nextTick(function() {
-    const idx = id - 1;
-    if (records[idx]) {
-      cb(null, records[idx]);
-    } else {
-      cb(new Error('User ' + id + ' does not exist'));
-    }
-  });
-};
+//create 3 prompts to test
+Prompt.count({}, (err, count) => {
+  if (count < 3) {
+    const prompt1 = new Prompt({
+      'title': 'write a poem about everything you would like to say no to.'
+      });
 
-exports.findByUsername = function(username, cb) {
-  process.nextTick(function() {
-    for (let i = 0, len = records.length; i < len; i++) {
-      const record = records[i];
-      if (record.username === username) {
-        return cb(null, record);
-      }
-    }
-    return cb(null, null);
-  });
-};
+      prompt1.save((err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('sucessfully created prompt1!');
+        }
+    });
+
+    const prompt2 = new Prompt({
+      'title': 'write a poem about a color.'
+      });
+
+      prompt2.save((err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('sucessfully created prompt2!');
+        }
+    });
+
+    const prompt3 = new Prompt({
+      'title': 'write stuff'
+      });
+
+      prompt3.save((err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('sucessfully created prompt3!');
+        }
+    });
+  } else {
+    console.log('not creating any more prompts');
+  }
+})
