@@ -28,7 +28,7 @@ const Poem = mongoose.model('Poem', PoemSchema);
 const Prompt = mongoose.model('Prompt', PromptSchema);
 const User = mongoose.model('User', UserSchema);
 
-mongoose.connect('mongodb://localhost/atq203-final-project');
+mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
 
 const records = [{ id: 1, username: 'jack', password: 'secret', displayName: 'Jack', emails: [{ value: 'jack@example.com' }]},
 { id: 2, username: 'jill', password: 'birthday', displayName: 'Jill', emails: [{ value: 'jill@example.com' }] }];
