@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const URLSlugs = require('mongoose-url-slugs');
+require('./env');
 
 const PoemSchema = new Schema({
     authorID: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -31,7 +32,7 @@ const Prompt = mongoose.model('Prompt', PromptSchema);
 const User = mongoose.model('User', UserSchema);
 
 //mongoose.connect('mongodb://localhost/fp');
-mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
+mongoose.connect(`mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@ds147920.mlab.com:47920/finalproject`);
 
 
 //create 3 prompts to test

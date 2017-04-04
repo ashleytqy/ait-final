@@ -1,12 +1,16 @@
 const express = require('express');
+const app = express();
 const path = require('path');
 // const favicon = require('serve-favicon');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-// const passport = require('passport');
+const passport = require('passport');
+const Strategy = require('passport-facebook').Strategy;
 // const Strategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
+const session = require('express-session');
+require('./env');
 
 //database setup
 const db = require('./db');
@@ -15,46 +19,102 @@ const Poem = mongoose.model('Poem');
 const User = mongoose.model('User');
 
 // Configure the local strategy for use by Passport.
-// passport.use(new Strategy(
-//   function(username, password, cb) {
-//     db.users.findByUsername(username, function(err, user) {
-//       if (err) { return cb(err); }
-//       if (!user) { return cb(null, false); }
-//       if (user.password !== password) { return cb(null, false); }
-//       return cb(null, user);
-//     });
-//   }));
+passport.use(new Strategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: 'http://localhost:3000/login/facebook/return'
+  },
+  (accessToken, refreshToken, profile, cb) =>{
+    //save profile to database
+    User.findOne({'userID': profile.id}, (err, user) => {
+      console.log('user is');
+      console.log(user);
+      //user doesn't already exist
+      if (!user) {
+        //create a new user
+        const newUser = new User({
+          'name': profile.displayName,
+          'userID': profile.id,
+          'poems': []
+        });
+
+        //save new user to database
+        newUser.save(err => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('new user created!');
+            return cb(null, newUser);
+          };
+        }) 
+
+      } else {
+        //user already exists
+        console.log('user exists~!');
+        return cb(null, user);
+      }
+    })
+  }));
 
 // Configure Passport authenticated session persistence.
-// passport.serializeUser(function(user, cb) {
-//   cb(null, user.id);
-// });
+passport.serializeUser((user, cb) => {
+  cb(null, user.userID);
+});
 
-// passport.deserializeUser(function(id, cb) {
-//   db.users.findById(id, function (err, user) {
-//     if (err) { return cb(err); }
-//     cb(null, user);
-//   });
-// });
-
-const app = express();
+passport.deserializeUser((id, cb) => {
+  User.findOne({'userID': id}, (err, user) => {
+    cb(err, user);
+  });
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
+
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized: true
+}));
 app.use(express.static(path.join(__dirname, 'public')));
-
-
 // Initialize Passport and restore authentication state
-// app.use(passport.initialize());
-// app.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+// Define Routes
+app.get('/login', (req, res) => {
+  res.render('login');
+})
+
+app.get('/login/facebook', passport.authenticate('facebook', {session: true}));
+
+app.get('/login/facebook/return', 
+  passport.authenticate('facebook', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/');
+  });
+
+
+app.get('/profile',
+  require('connect-ensure-login').ensureLoggedIn(),
+  function(req, res){
+    console.log('connect ensure login:');
+    console.log(req);
+    res.render('user', { user: req.user });
+  });
+
+
+//end passport stuff
+
+//prompt stuff
 app.get('/:prompt/create', (req, res) => {
   const slug = req.params.prompt;
   Prompt.findOne({'slug': slug}, (err, prompt, count) => {
@@ -181,7 +241,6 @@ app.get('/:prompt', (req, res) => {
         Prompt.findOne({'slug': promptSlug})
               .populate('poems')
               .exec((err, prompt) => {
-                console.log(promptSlug);
                 res.render('prompt', { 'slug': promptSlug, 'title': prompt.title, 'poems': prompt.poems});   
               });
       }
@@ -192,25 +251,27 @@ app.get('/:prompt', (req, res) => {
 //homepage
 app.get('/', (req, res) => {
   Prompt.find({}, (err, prompts) => {
-      res.render('index', {'prompts': prompts});
+    console.log('USER IS');
+    console.log(req.user);
+      res.render('index', {'prompts': prompts,'user': req.user});
   })
 })
 
 
 // handle 404 errors
-app.use(function(req, res) {
+app.use((req, res) => {
   res.status(400);
   res.render('error', {message: '404 error: page not found'});
 });
 
 // handle 500 errors
-app.use(function(error, req, res) {
+app.use((error, req, res) => {
   res.status(500);
   res.render('error', {message: '500 error'});
 });
 
 // error handler
-app.use(function(err, req, res) {
+app.use((err, req, res) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
