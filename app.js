@@ -134,9 +134,35 @@ app.get('/:prompt/:poem/delete', (req, res) => {
       //show 'success' or 'failed' message
       res.redirect('/' + promptSlug);
     });
-
 });
 
+app.get('/:prompt/:poem/edit', (req, res) => {
+    //should be /:prompt/create
+    const promptSlug = req.params.prompt;
+    const poemID = req.params.poem;
+
+    Poem.findOne({'_id': poemID}, (err, poem) => {
+      if (err) {
+        res.render(err);
+      } else {
+        console.log('success!');
+        console.log(poem);
+        res.render('edit', {'originalBody': poem.body});
+      }
+    });
+});
+
+app.post('/:prompt/:poem/edit', (req, res) => {
+    //should be /:prompt/create
+    const promptSlug = req.params.prompt;
+    const poemID = req.params.poem;
+    const htmlBody = req.body.htmlBody;
+
+    Poem.findByIdAndUpdate(poemID, {'body': htmlBody }, (err, poem) => {
+      console.log(err, poem);
+      res.redirect(`/${promptSlug}`);
+    })
+});
 
 //getting the prompt page, and populating the poems that respond to that prompt
 app.get('/:prompt', (req, res) => {
