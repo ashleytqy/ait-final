@@ -30,8 +30,8 @@ const Poem = mongoose.model('Poem', PoemSchema);
 const Prompt = mongoose.model('Prompt', PromptSchema);
 const User = mongoose.model('User', UserSchema);
 
-mongoose.connect('mongodb://localhost/fp');
-// mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
+//mongoose.connect('mongodb://localhost/fp');
+mongoose.connect('mongodb://ashleytqy:password123@ds147920.mlab.com:47920/finalproject');
 
 
 //create 3 prompts to test
@@ -50,7 +50,7 @@ Prompt.count({}, (err, count) => {
     });
 
     const prompt2 = new Prompt({
-      'title': 'write a poem about a color.'
+      'title': 'write a poem that is a riddle.'
       });
 
       prompt2.save((err) => {
@@ -62,7 +62,7 @@ Prompt.count({}, (err, count) => {
     });
 
     const prompt3 = new Prompt({
-      'title': 'write stuff'
+      'title': 'pen a list poem documenting some things you dread.'
       });
 
       prompt3.save((err) => {
