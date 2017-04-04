@@ -10,6 +10,7 @@ const Strategy = require('passport-facebook').Strategy;
 // const Strategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
 const session = require('express-session');
+const isLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 require('./env');
 
 //database setup
@@ -81,7 +82,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({
   secret: 'keyboard cat',
   resave: true,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: { maxAge: 3600000 }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 // Initialize Passport and restore authentication state
@@ -90,9 +92,30 @@ app.use(passport.session());
 
 
 // Define Routes
-app.get('/login', (req, res) => {
-  res.render('login');
+
+//stats
+app.get('/stats', (req, res) => {
+  Prompt.find({}, (err, prompts) => {
+    res.render('stats', {'prompts': prompts, 'user': req.user});
+  })
 })
+
+app.get('/login', (req, res) => {
+  if (req.user) {
+    //if already logged in
+    //redirect to home page
+    res.redirect('/');
+  } else {
+    res.render('login');
+  }
+})
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  console.log('logged out!');
+  res.redirect('/');
+});
+
 
 app.get('/login/facebook', passport.authenticate('facebook', {session: true}));
 
@@ -102,27 +125,32 @@ app.get('/login/facebook/return',
     res.redirect('/');
   });
 
+app.get('/user/:id', (req, res) => {
+  //find that id
+  const id = req.params.id;
+  User.findOne({'userID': id}, (err, user) => {
+    console.log(user);
+    res.render('user', {user});
+  })
+});
+
 
 app.get('/profile',
-  require('connect-ensure-login').ensureLoggedIn(),
+  isLoggedIn(),
   function(req, res){
-    console.log('connect ensure login:');
-    console.log(req);
-    res.render('user', { user: req.user });
+    res.redirect('/user/' + req.user.userID);
   });
 
 
-//end passport stuff
-
 //prompt stuff
-app.get('/:prompt/create', (req, res) => {
+app.get('/:prompt/create', isLoggedIn(),(req, res) => {
   const slug = req.params.prompt;
   Prompt.findOne({'slug': slug}, (err, prompt, count) => {
-      res.render('create', {title: prompt.title});
+      res.render('create', {title: prompt.title, user: req.user});
   });
 });
 
-app.post('/:prompt/create', (req, res) => {
+app.post('/:prompt/create', isLoggedIn(), (req, res) => {
     //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const htmlBody = req.body.htmlBody;
@@ -131,13 +159,12 @@ app.post('/:prompt/create', (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        console.log(prompt);
-        console.log('found the prompt!')
-
         //create the poem object and save it
+        //use _id (created by mongo) instead of userID (via Facebook)
         const poem = new Poem({
-          'user' : 'This is a test user',
-          'prompt'   : 'This is a test prompt.',
+          'authorID' : req.user._id,
+          'username': req.user.name,
+          'prompt'   : prompt.title,
           'body': htmlBody,
           'likes': 0
         });
@@ -149,21 +176,28 @@ app.post('/:prompt/create', (req, res) => {
             //save poem into prompts database
             prompt.poems.push(poem._id);
             prompt.save(err => {
-              console.log('new set of poems:');
-              console.log(prompt);
-              console.log('successfully saved poem!');
+              console.log('successfully saved poem into prompts databse!');
             })
+
+            //save poem into user's database too
+            User.findOne({'userID': req.user.userID}, (err, user) => {
+              user.poems.push(poem._id);
+              user.save(err => {
+                console.log('successfuly saved poem into user database!');
+              })
+            })
+
+            //show 'success' or 'failed' message
+            //should redirect to the prompt page
+            //this should actually wait til the above stuff is done... ??
+            res.redirect(`/${promptSlug}`);
           }  
         });
       }
-
-      //show 'success' or 'failed' message
-      //should redirect to the prompt page
-      res.redirect(`/${promptSlug}`);
     })
 });
 
-app.get('/:prompt/:poem/delete', (req, res) => {
+app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
     //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
@@ -196,8 +230,7 @@ app.get('/:prompt/:poem/delete', (req, res) => {
     });
 });
 
-app.get('/:prompt/:poem/edit', (req, res) => {
-    //should be /:prompt/create
+app.get('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
 
@@ -207,13 +240,12 @@ app.get('/:prompt/:poem/edit', (req, res) => {
       } else {
         console.log('success!');
         console.log(poem);
-        res.render('edit', {'originalBody': poem.body});
+        res.render('edit', {'originalBody': poem.body, 'user': req.user});
       }
     });
 });
 
-app.post('/:prompt/:poem/edit', (req, res) => {
-    //should be /:prompt/create
+app.post('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
     const htmlBody = req.body.htmlBody;
