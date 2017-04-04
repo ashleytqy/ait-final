@@ -1,7 +1,9 @@
 <div class="pa3 pa5-ns">
     <ul class="list pl0 measure center">
     {{#each prompts as |prompt|}}
-        <li class="lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30">{{prompt}}</li>
+    <a class="dark-blue no-underline underline-hover" href="/{{prompt.slug}}">
+        <li class="lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--dark-blue-30">{{prompt.title}}</li>
+     </a>
     {{/each}}
     </ul>
 </div>

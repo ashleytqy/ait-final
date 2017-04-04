@@ -1,16 +1,21 @@
-<h1>{{title}}</h1>
-<a href="/{{slug}}/create">submit a poem</a>
-<div>
+<div class="mw9 fl w-100 w-25-ns pa2">
+  <h1>{{title}}</h1>
+  <a href="/{{slug}}/create">submit a poem</a>
+</div>
+
+<div class="mw9 center ph3-ns">
+  <div class="cf ph2-ns">
     {{#each poems as |poem|}}
-    <article class="draggable mw5 mw6-ns hidden ba mv4">
-      <div class="pa3">
+    <article class="draggable fl w-100 w-third-ns pa2">
+      <div class="pa3 ba">
         <p class="f6 f5-ns lh-copy measure mv0">
             {{{poem.body}}}
         </p>
       </div>
 		<h1 class="f4 bg-near-black white mv0 pv2 ph3">by {{poem.username}} / {{poem.likes}} likes</h1>
-		<a href="{{../slug}}/{{poem._id}}/delete">delete this poem</a>
-		<a href="{{../slug}}/{{poem._id}}/edit">edit this poem</a>
+		<a class="link b hover-red no-underline black dib ph2 pv1" href="{{../slug}}/{{poem._id}}/delete">delete</a>
+		<a class="link b hover-light-purple no-underline black dib ph2 pv1" href="{{../slug}}/{{poem._id}}/edit">edit</a>
     </article>
 {{/each}}
+    </div>
 <div>

@@ -189,14 +189,25 @@ app.get('/:prompt', (req, res) => {
   })
 });
 
+//homepage
+app.get('/', (req, res) => {
+  Prompt.find({}, (err, prompts) => {
+      res.render('index', {'prompts': prompts});
+  })
+})
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  const err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+
+// handle 404 errors
+app.use(function(req, res) {
+  res.status(400);
+  res.render('error', {message: '404 error: page not found'});
 });
 
+// handle 500 errors
+app.use(function(error, req, res) {
+  res.status(500);
+  res.render('error', {message: '500 error'});
+});
 
 // error handler
 app.use(function(err, req, res) {
