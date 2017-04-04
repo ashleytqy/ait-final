@@ -41,7 +41,7 @@ an example `Poem`:
 ```
 
 ## First Draft Schema
-[Link to Schema](wallflower/db.js)
+[Link to Schema](/db.js)
 
 
 
