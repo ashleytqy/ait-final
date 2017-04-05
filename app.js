@@ -11,6 +11,8 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const isLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 const striptags = require('striptags');
+const _ = require('underscore');
+
 require('./env');
 
 //database setup
@@ -19,22 +21,13 @@ const Prompt = mongoose.model('Prompt');
 const Poem = mongoose.model('Poem');
 const User = mongoose.model('User');
 
-//error handler
-function errorHandler(err, res) {
-  if (res) {
-    res.render('error', {message: err});
-  } else {
-    console.log(err);
-  }
-}
-
-// Configure the local strategy for use by Passport.
+//configure the passport facebook strategy
 passport.use(new Strategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
     callbackURL: 'http://localhost:3000/login/facebook/return'
   },
-  (accessToken, refreshToken, profile, cb) =>{
+  (accessToken, refreshToken, profile, cb) => {
     //save profile to database
     User.findOne({userID: profile.id})
         .exec()
@@ -66,7 +59,7 @@ passport.use(new Strategy({
         .catch(err => console.log(err));
   }));
 
-// Configure Passport authenticated session persistence.
+//configure passport authenticated session persistence.
 passport.serializeUser((user, cb) => {
   cb(null, user.userID);
 });
@@ -82,7 +75,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 
-// uncomment after placing your favicon in /public
+//uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(cookieParser());
@@ -95,31 +88,22 @@ app.use(session({
   cookie: { maxAge: 3600000 }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
-// Initialize Passport and restore authentication state
+
+//initialize passport and restore authentication state
 app.use(passport.initialize());
 app.use(passport.session());
 
 
-// Define Routes
-//stats
+/*
+routes
+*/
+
 app.get('/stats', (req, res) => {
   let userWithMostPoems;
   let promptWithMostPoems;
-  let longestPoem;
+  let longestPoemLength;
 
-  Poem.find({})
-       .exec()
-       .then(poems => {
-        longestPoem = poems.reduce((acc, poem) => {
-          const length = striptags(poem.body).length;
-          if (length > acc.maxNum) {
-            acc.maxNum = length;
-          }
-          return acc;
-        }, {maxNum: 0});
-       });
-
-  // find the user with most poems 
+  //find the user with most poems 
   User.find({})
       .exec()
       .then(users => {
@@ -129,28 +113,38 @@ app.get('/stats', (req, res) => {
               acc.name = user.name;
             }
             return acc;
-          }, {maxNum: 0});        
-      })
-      .then(() => {
-          Prompt.find({})
-                .exec()
-                .then(prompts => {
-                  // find the prompt with the most responses
-                  promptWithMostPoems = prompts.reduce((acc, prompt) => {
-                    if (prompt.poems.length > acc.maxNum) {
-                      acc.maxNum = prompt.poems.length;
-                      acc.title = prompt.title;
-                    }
-                    return acc;
-                  }, {maxNum: 0});
+          }, {maxNum: 0}); 
 
-                  res.render('stats', {'prompts': prompts,
-                                        'user': req.user,
-                                        'users_most_poem': userWithMostPoems.name,
-                                        'prompt_most_poem': promptWithMostPoems.title,
-                                        'maxLength': longestPoem.maxNum});
-          })
-          .catch(err => console.log(err));
+          //find longest poem length
+          Poem.find({})
+             .exec()
+             .then(poems => {
+              longestPoemLength = poems.reduce((acc, poem) => {
+                const length = striptags(poem.body).length;
+                if (length > acc.maxNum) {
+                  acc.maxNum = length;
+                }
+                return acc;
+              }, {maxNum: 0});
+             })
+
+          //find the prompt with the most responses
+          Prompt.find({})
+            .exec()
+            .then(prompts => {
+              promptWithMostPoems = prompts.reduce((acc, prompt) => {
+                if (prompt.poems.length > acc.maxNum) {
+                  acc.maxNum = prompt.poems.length;
+                  acc.title = prompt.title;
+                }
+                return acc;
+              }, {maxNum: 0});
+                //render after all of these values have populated
+                res.render('stats', {'user': req.user,
+                      'users_most_poem': userWithMostPoems.name,
+                      'prompt_most_poem': promptWithMostPoems.title,
+                      'maxLength': longestPoemLength.maxNum});
+          })   
       })
       .catch(err => console.log(err));
 })
@@ -167,7 +161,6 @@ app.get('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.logout();
-  console.log('logged out!');
   res.redirect('/');
 });
 
@@ -208,11 +201,9 @@ app.get('/profile', isLoggedIn(), (req, res) => {
 });
 
 
-//prompt stuff
 app.get('/:prompt/create', isLoggedIn(),(req, res) => {
   const slug = req.params.prompt;
   Prompt.findOne({'slug': slug}, (err, prompt, count) => {
-      errorHandler(err, res);
       res.render('create', {title: prompt.title, user: req.user});
   });
 });
@@ -222,7 +213,6 @@ app.post('/:prompt/create', isLoggedIn(), (req, res) => {
     const htmlBody = req.body.htmlBody;
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-      errorHandler(err, res);
       //create the poem object and save it
       //use _id (created by mongo) instead of userID (via Facebook)
       const poem = new Poem({
@@ -234,7 +224,6 @@ app.post('/:prompt/create', isLoggedIn(), (req, res) => {
       });
 
       poem.save((err) => {
-        errorHandler(err, res);
         //save poem into prompts database
         prompt.poems.push(poem._id);
         prompt.save(err => {
@@ -268,7 +257,6 @@ app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
     });
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-      errorHandler(err, res);
 
       const index = prompt.poems.indexOf(poemID);
       if (index > -1) {
@@ -276,7 +264,6 @@ app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
       }
 
       prompt.save(err => {
-        errorHandler(err, res);
         res.redirect('/' + promptSlug);
       })
     });
@@ -287,7 +274,6 @@ app.get('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const poemID = req.params.poem;
 
     Poem.findOne({'_id': poemID}, (err, poem) => {
-      errorHandler(err, res);
       res.render('edit', {originalBody: poem.body, user: req.user, title: poem.prompt});
     });
 });
@@ -298,7 +284,6 @@ app.post('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const htmlBody = req.body.htmlBody;
 
     Poem.findByIdAndUpdate(poemID, {'body': htmlBody }, (err, poem) => {
-      errorHandler(err, res);
       res.redirect(`/${promptSlug}`);
     })
 });
@@ -308,7 +293,6 @@ app.get('/:prompt', (req, res) => {
   const promptSlug = req.params.prompt;
   //find prompt in database
   Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-    errorHandler(err, res);
     //check if prompt exists
     if (prompt === null || prompt === undefined) {
       res.render('error', {message: `page doesn't exist.`});
@@ -317,8 +301,19 @@ app.get('/:prompt', (req, res) => {
       Prompt.findOne({'slug': promptSlug})
             .populate('poems')
             .exec((err, prompt) => {
-              errorHandler(err, res);
-              res.render('prompt', { slug: promptSlug, title: prompt.title, poems: prompt.poems});   
+              let poems;
+              if (req.user) {
+                const currentUserID = req.user._id;
+                //check if is user's poems
+                prompt.poems.forEach( poem => {
+                  if (String(poem.authorID) === String(currentUserID)) {
+                    poem.canModify = true;
+                  } else {
+                    poem.canModify = false;
+                  }
+                })
+              }  
+              res.render('prompt', { slug: promptSlug, title: prompt.title, 'poems': prompt.poems, user: req.user}); 
             });
     }
   })
@@ -332,19 +327,19 @@ app.get('/', (req, res) => {
 })
 
 
-// handle 404 errors
+//handle 404 errors
 app.use((req, res) => {
   res.status(400);
   res.render('error', {message: '404 error: page not found'});
 });
 
-// handle 500 errors
+//handle 500 errors
 app.use((error, req, res) => {
   res.status(500);
   res.render('error', {message: '500 error'});
 });
 
-// error handler
+//error handler
 app.use((err, req, res) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
