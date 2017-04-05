@@ -7,10 +7,10 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const Strategy = require('passport-facebook').Strategy;
-// const Strategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
 const session = require('express-session');
 const isLoggedIn = require('connect-ensure-login').ensureLoggedIn;
+const striptags = require('striptags');
 require('./env');
 
 //database setup
@@ -27,34 +27,34 @@ passport.use(new Strategy({
   },
   (accessToken, refreshToken, profile, cb) =>{
     //save profile to database
-    User.findOne({'userID': profile.id}, (err, user) => {
-      console.log('user is');
-      console.log(user);
-      //user doesn't already exist
-      if (!user) {
-        //create a new user
-        const newUser = new User({
-          'name': profile.displayName,
-          'userID': profile.id,
-          'poems': []
-        });
+    User.findOne({'userID': profile.id})
+        .exec()
+        .then((err, user) => {
+          //user doesn't exist
+          if (!user) {
+            //create a new user
+            const newUser = new User({
+              'name': profile.displayName.toLowerCase(),
+              'userID': profile.id,
+              'poems': []
+            });
 
-        //save new user to database
-        newUser.save(err => {
-          if (err) {
-            console.log(err);
+            //save new user to database
+            newUser.save(err => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log('new user created!');
+                return cb(null, newUser);
+              };
+            }) 
           } else {
-            console.log('new user created!');
-            return cb(null, newUser);
-          };
-        }) 
-
-      } else {
-        //user already exists
-        console.log('user exists~!');
-        return cb(null, user);
-      }
-    })
+            //user already exists
+            console.log('user exists~!');
+            return cb(null, user);
+          }
+        })
+        .catch(err => console.log(err));
   }));
 
 // Configure Passport authenticated session persistence.
@@ -95,9 +95,56 @@ app.use(passport.session());
 
 //stats
 app.get('/stats', (req, res) => {
-  Prompt.find({}, (err, prompts) => {
-    res.render('stats', {'prompts': prompts, 'user': req.user});
-  })
+  let userWithMostPoems;
+  let promptWithMostPoems;
+  let longestPoem;
+
+  Poem.find({})
+       .exec()
+       .then(poems => {
+        longestPoem = poems.reduce((acc, poem) => {
+          const length = striptags(poem.body).length;
+          if (length > acc.maxNum) {
+            acc.maxNum = length;
+          }
+          return acc;
+        }, {maxNum: 0});
+       });
+
+  // find the user with most poems 
+  User.find({})
+      .exec()
+      .then(users => {
+          userWithMostPoems = users.reduce((acc, user) => {
+            if (user.poems.length > acc.maxNum) {
+              acc.maxNum = user.poems.length;
+              acc.name = user.name;
+            }
+            return acc;
+          }, {maxNum: 0});        
+      })
+      .then(() => {
+          Prompt.find({})
+                .exec()
+                .then(prompts => {
+                  // find the prompt with the most responses
+                  promptWithMostPoems = prompts.reduce((acc, prompt) => {
+                    if (prompt.poems.length > acc.maxNum) {
+                      acc.maxNum = prompt.poems.length;
+                      acc.title = prompt.title;
+                    }
+                    return acc;
+                  }, {maxNum: 0});
+
+                  res.render('stats', {'prompts': prompts,
+                                        'user': req.user,
+                                        'users_most_poem': userWithMostPoems.name,
+                                        'prompt_most_poem': promptWithMostPoems.title,
+                                        'maxLength': longestPoem.maxNum});
+          })
+          .catch(err => console.log(err));
+      })
+      .catch(err => console.log(err));
 })
 
 app.get('/login', (req, res) => {
@@ -126,27 +173,30 @@ app.get('/login/facebook/return',
   });
 
 app.get('/user/:id', (req, res) => {
-  //find that id
+  //find the user
   const id = req.params.id;
   User.findOne({'userID': id})
       .populate('poems')
       .exec((err, user) => {
-        const likesCount = user.poems.reduce((acc, val) => {
+        if (user === null || user === undefined) {
+          res.render('error', {message: 'user not found'});
+        } else {
+          const likesCount = user.poems.reduce((acc, val) => {
             return acc + val.likes
           }, 0);
 
-        res.render('user', {name: user.name,
-                            total_poems: user.poems.length,
-                            total_likes: likesCount});
-      });
+          res.render('user', {name: user.name,
+                              total_poems: user.poems.length,
+                              total_likes: likesCount,
+                              user: req.user});
+          }   
+        });
 });
 
 
-app.get('/profile',
-  isLoggedIn(),
-  function(req, res){
+app.get('/profile', isLoggedIn(), (req, res) => {
     res.redirect('/user/' + req.user.userID);
-  });
+});
 
 
 //prompt stuff
@@ -205,7 +255,6 @@ app.post('/:prompt/create', isLoggedIn(), (req, res) => {
 });
 
 app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
-    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
 
@@ -247,7 +296,7 @@ app.get('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
       } else {
         console.log('success!');
         console.log(poem);
-        res.render('edit', {'originalBody': poem.body, 'user': req.user});
+        res.render('edit', {'originalBody': poem.body, 'user': req.user, 'title': poem.prompt});
       }
     });
 });
@@ -290,8 +339,6 @@ app.get('/:prompt', (req, res) => {
 //homepage
 app.get('/', (req, res) => {
   Prompt.find({}, (err, prompts) => {
-    console.log('USER IS');
-    console.log(req.user);
       res.render('index', {'prompts': prompts,'user': req.user});
   })
 })
