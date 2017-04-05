@@ -128,10 +128,17 @@ app.get('/login/facebook/return',
 app.get('/user/:id', (req, res) => {
   //find that id
   const id = req.params.id;
-  User.findOne({'userID': id}, (err, user) => {
-    console.log(user);
-    res.render('user', {user});
-  })
+  User.findOne({'userID': id})
+      .populate('poems')
+      .exec((err, user) => {
+        const likesCount = user.poems.reduce((acc, val) => {
+            return acc + val.likes
+          }, 0);
+
+        res.render('user', {name: user.name,
+                            total_poems: user.poems.length,
+                            total_likes: likesCount});
+      });
 });
 
 
