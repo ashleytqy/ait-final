@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const path = require('path');
-// const favicon = require('serve-favicon');
+const favicon = require('serve-favicon');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -11,7 +11,6 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const isLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 const striptags = require('striptags');
-const _ = require('underscore');
 
 require('./env');
 
@@ -74,9 +73,7 @@ passport.deserializeUser((id, cb) => {
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-
-//uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+// app.use(favicon(path.join(__dirname, 'public', 'rimbaud.ico')));
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -103,6 +100,7 @@ app.get('/stats', (req, res) => {
   let promptWithMostPoems;
   let longestPoemLength;
 
+  //something wrong here...
   //find the user with most poems 
   User.find({})
       .exec()
@@ -113,21 +111,23 @@ app.get('/stats', (req, res) => {
               acc.name = user.name;
             }
             return acc;
-          }, {maxNum: 0}); 
-
-          //find longest poem length
-          Poem.find({})
-             .exec()
-             .then(poems => {
-              longestPoemLength = poems.reduce((acc, poem) => {
-                const length = striptags(poem.body).length;
-                if (length > acc.maxNum) {
-                  acc.maxNum = length;
-                }
-                return acc;
-              }, {maxNum: 0});
-             })
-
+          }, {maxNum: 0});   
+      })
+      .then(() => {
+        //find longest poem length
+        Poem.find({})
+           .exec()
+           .then(poems => {
+            longestPoemLength = poems.reduce((acc, poem) => {
+              const length = striptags(poem.body).length;
+              if (length > acc.maxNum) {
+                acc.maxNum = length;
+              }
+              return acc;
+            }, {maxNum: 0});
+           })
+      })
+      .then(() => {
           //find the prompt with the most responses
           Prompt.find({})
             .exec()
@@ -144,7 +144,7 @@ app.get('/stats', (req, res) => {
                       'users_most_poem': userWithMostPoems.name,
                       'prompt_most_poem': promptWithMostPoems.title,
                       'maxLength': longestPoemLength.maxNum});
-          })   
+          }) 
       })
       .catch(err => console.log(err));
 })
@@ -182,13 +182,8 @@ app.get('/user/:id', (req, res) => {
         if (user === null || user === undefined) {
           res.render('error', {message: 'user not found'});
         } else {
-          const likesCount = user.poems.reduce((acc, val) => {
-            return acc + val.likes
-          }, 0);
-
           res.render('user', {name: user.name,
                               total_poems: user.poems.length,
-                              total_likes: likesCount,
                               user: req.user});
           }   
         })
