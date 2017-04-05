@@ -6,10 +6,8 @@ require('./env');
 const PoemSchema = new Schema({
     authorID: {type: Schema.Types.ObjectId, ref: 'User'},
     username: {type: String, default: '', trim: true}, 
-    //is username necessary?
     prompt: {},
-    body: {type: String, default: '', trim: true},
-    likes: {type: Number, default: 0, trim: true},
+    body: {type: String, default: '', trim: true}
 });
 
 const PromptSchema = new Schema({
@@ -33,7 +31,6 @@ const User = mongoose.model('User', UserSchema);
 
 //mongoose.connect('mongodb://localhost/fp');
 mongoose.connect(`mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@ds147920.mlab.com:47920/finalproject`);
-
 
 //create 3 prompts to test
 Prompt.count({}, (err, count) => {

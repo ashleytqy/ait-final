@@ -19,6 +19,15 @@ const Prompt = mongoose.model('Prompt');
 const Poem = mongoose.model('Poem');
 const User = mongoose.model('User');
 
+//error handler
+function errorHandler(err, res) {
+  if (res) {
+    res.render('error', {message: err});
+  } else {
+    console.log(err);
+  }
+}
+
 // Configure the local strategy for use by Passport.
 passport.use(new Strategy({
     clientID: process.env.CLIENT_ID,
@@ -27,7 +36,7 @@ passport.use(new Strategy({
   },
   (accessToken, refreshToken, profile, cb) =>{
     //save profile to database
-    User.findOne({'userID': profile.id})
+    User.findOne({userID: profile.id})
         .exec()
         .then((err, user) => {
           //user doesn't exist
@@ -63,7 +72,7 @@ passport.serializeUser((user, cb) => {
 });
 
 passport.deserializeUser((id, cb) => {
-  User.findOne({'userID': id}, (err, user) => {
+  User.findOne({userID: id}, (err, user) => {
     cb(err, user);
   });
 });
@@ -92,7 +101,6 @@ app.use(passport.session());
 
 
 // Define Routes
-
 //stats
 app.get('/stats', (req, res) => {
   let userWithMostPoems;
@@ -190,7 +198,8 @@ app.get('/user/:id', (req, res) => {
                               total_likes: likesCount,
                               user: req.user});
           }   
-        });
+        })
+      .catch(err => console.log(err));
 });
 
 
@@ -203,54 +212,48 @@ app.get('/profile', isLoggedIn(), (req, res) => {
 app.get('/:prompt/create', isLoggedIn(),(req, res) => {
   const slug = req.params.prompt;
   Prompt.findOne({'slug': slug}, (err, prompt, count) => {
+      errorHandler(err, res);
       res.render('create', {title: prompt.title, user: req.user});
   });
 });
 
 app.post('/:prompt/create', isLoggedIn(), (req, res) => {
-    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const htmlBody = req.body.htmlBody;
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-      if (err) {
-        console.log(err);
-      } else {
-        //create the poem object and save it
-        //use _id (created by mongo) instead of userID (via Facebook)
-        const poem = new Poem({
-          'authorID' : req.user._id,
-          'username': req.user.name,
-          'prompt'   : prompt.title,
-          'body': htmlBody,
-          'likes': 0
-        });
+      errorHandler(err, res);
+      //create the poem object and save it
+      //use _id (created by mongo) instead of userID (via Facebook)
+      const poem = new Poem({
+        'authorID' : req.user._id,
+        'username': req.user.name,
+        'prompt'   : prompt.title,
+        'body': htmlBody,
+        'likes': 0
+      });
 
-        poem.save((err) => {
-          if (err) {
-            res.render('error', {message: err});
-          } else {
-            //save poem into prompts database
-            prompt.poems.push(poem._id);
-            prompt.save(err => {
-              console.log('successfully saved poem into prompts databse!');
-            })
+      poem.save((err) => {
+        errorHandler(err, res);
+        //save poem into prompts database
+        prompt.poems.push(poem._id);
+        prompt.save(err => {
+          console.log('successfully saved poem into prompts databse!');
+        })
 
-            //save poem into user's database too
-            User.findOne({'userID': req.user.userID}, (err, user) => {
-              user.poems.push(poem._id);
-              user.save(err => {
-                console.log('successfuly saved poem into user database!');
-              })
-            })
+        //save poem into user's database too
+        User.findOne({'userID': req.user.userID}, (err, user) => {
+          user.poems.push(poem._id);
+          user.save(err => {
+            console.log('successfuly saved poem into user database!');
+          })
+        })
 
-            //show 'success' or 'failed' message
-            //should redirect to the prompt page
-            //this should actually wait til the above stuff is done... ??
-            res.redirect(`/${promptSlug}`);
-          }  
-        });
-      }
+        //show 'success' or 'failed' message
+        //should redirect to the prompt page
+        //this should actually wait til the above stuff is done... ??
+        res.redirect(`/${promptSlug}`); 
+      });
     })
 });
 
@@ -259,30 +262,23 @@ app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
     const poemID = req.params.poem;
 
     Poem.findByIdAndRemove(poemID, (err, poem) => {
-      if (!err) {
-        console.log('success!');
+      if (err) {
+        res.render('error', {message: 'Unable to delete poem.'})
       }
     });
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(prompt);
-        console.log('found the prompt!');
+      errorHandler(err, res);
 
-        const index = prompt.poems.indexOf(poemID);
-        if (index > -1) {
-          prompt.poems.splice(index, 1);
-        }
-
-        prompt.save(err => {
-          console.log('new set of poems after deleting:');
-          console.log(prompt);
-        })
+      const index = prompt.poems.indexOf(poemID);
+      if (index > -1) {
+        prompt.poems.splice(index, 1);
       }
-      //show 'success' or 'failed' message
-      res.redirect('/' + promptSlug);
+
+      prompt.save(err => {
+        errorHandler(err, res);
+        res.redirect('/' + promptSlug);
+      })
     });
 });
 
@@ -291,13 +287,8 @@ app.get('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const poemID = req.params.poem;
 
     Poem.findOne({'_id': poemID}, (err, poem) => {
-      if (err) {
-        res.render(err);
-      } else {
-        console.log('success!');
-        console.log(poem);
-        res.render('edit', {'originalBody': poem.body, 'user': req.user, 'title': poem.prompt});
-      }
+      errorHandler(err, res);
+      res.render('edit', {originalBody: poem.body, user: req.user, title: poem.prompt});
     });
 });
 
@@ -307,7 +298,7 @@ app.post('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
     const htmlBody = req.body.htmlBody;
 
     Poem.findByIdAndUpdate(poemID, {'body': htmlBody }, (err, poem) => {
-      console.log(err, poem);
+      errorHandler(err, res);
       res.redirect(`/${promptSlug}`);
     })
 });
@@ -317,21 +308,18 @@ app.get('/:prompt', (req, res) => {
   const promptSlug = req.params.prompt;
   //find prompt in database
   Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-    if (err) {
-      console.log(err);
+    errorHandler(err, res);
+    //check if prompt exists
+    if (prompt === null || prompt === undefined) {
+      res.render('error', {message: `page doesn't exist.`});
     } else {
-      //check if prompt exists
-      if (prompt === null || prompt === undefined) {
-        res.render('error', {message: `prompt doesn't exist.`});
-      } else {
-        //prompt exists!
-        //find all the poems in this prompt and display it
-        Prompt.findOne({'slug': promptSlug})
-              .populate('poems')
-              .exec((err, prompt) => {
-                res.render('prompt', { 'slug': promptSlug, 'title': prompt.title, 'poems': prompt.poems});   
-              });
-      }
+      //find all the poems in this prompt and display it
+      Prompt.findOne({'slug': promptSlug})
+            .populate('poems')
+            .exec((err, prompt) => {
+              errorHandler(err, res);
+              res.render('prompt', { slug: promptSlug, title: prompt.title, poems: prompt.poems});   
+            });
     }
   })
 });
