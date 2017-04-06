@@ -19,3 +19,17 @@
 </article>
 
     <!-- display all poems written here and the prompts they are responding to -->
+<div class="mw9 center ph3-ns">
+  <div class="cf ph2-ns">
+    {{#each poems as |poem|}}
+    <article class="fl w-100 w-third-ns pa2">
+      <h3 class="bg-near-black white mv0 pv2 ph3">re: {{poem.prompt}}</h3>
+      <div class="pa3 ba">
+        <p class="f6 f5-ns lh-copy measure mv0">
+            {{{poem.body}}}
+        </p>
+      </div>
+    </article>
+{{/each}}
+</div>
+<div>

@@ -183,6 +183,7 @@ app.get('/user/:id', (req, res) => {
           res.render('error', {message: 'user not found'});
         } else {
           res.render('user', {name: user.name,
+                              poems: user.poems,
                               total_poems: user.poems.length,
                               user: req.user});
           }   
