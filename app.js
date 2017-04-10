@@ -95,6 +95,10 @@ app.use(passport.session());
 routes
 */
 
+app.get('/example', (req, res) => {
+  res.render('example');
+})
+
 app.get('/stats', (req, res) => {
   let userWithMostPoems;
   let promptWithMostPoems;
