@@ -171,7 +171,7 @@ app.get('/logout', (req, res) => {
 
 app.get('/login/facebook', passport.authenticate('facebook', {session: true}));
 
-app.get('/login/facebook/:returncode', 
+app.get('app/login/facebook/return', 
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   (req, res) => {
     console.log('return?')
