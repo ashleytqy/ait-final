@@ -24,7 +24,7 @@ const User = mongoose.model('User');
 passport.use(new Strategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: 'http://localhost:3000/login/facebook/return'
+    callbackURL: __dirname + '/login/facebook/return'
   },
   (accessToken, refreshToken, profile, cb) => {
     //save profile to database
