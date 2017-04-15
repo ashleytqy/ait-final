@@ -48,12 +48,19 @@ function getPoem(author) {
         const data = JSON.parse(req.responseText);
         const index = getRandomInt(0, data.length);
 
+        const author = data[index].author;
+        const title = data[index].title;
+
         let poem = '';
         data[index].lines.forEach(line => {
           poem += line + '<br/>';
         })
 
-        document.getElementsByClassName('example-poem')[0].innerHTML = poem;
+        document.getElementsByClassName('example-poem-title')[0].innerHTML = `${title} by ${author}`;
+        document.getElementsByClassName('example-poem-body')[0].innerHTML = poem;
+      } else {
+        const message = "Oop! Sorry"
+        document.getElementsByClassName('example-poem-body')[0].innerHTML = message;
       }
     })
 
