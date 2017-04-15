@@ -24,7 +24,7 @@ const User = mongoose.model('User');
 passport.use(new Strategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: __dirname + '/login/facebook/return'
+    callbackURL: 'boiling-meadow-69361.herokuapp.com' + '/login/facebook/return'
   },
   (accessToken, refreshToken, profile, cb) => {
     //save profile to database
@@ -171,13 +171,11 @@ app.get('/logout', (req, res) => {
 
 app.get('/login/facebook', passport.authenticate('facebook', {session: true}));
 
-app.get('app/login/facebook/return', 
+app.get('/login/facebook/return', 
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   (req, res) => {
-    console.log('return?')
     res.redirect('/');
   });
-
 
 app.get('/user/:id', (req, res) => {
   //find the user
