@@ -173,7 +173,8 @@ app.get('/login/facebook', passport.authenticate('facebook', {session: true}));
 
 app.get('/login/facebook/return', 
   passport.authenticate('facebook', { failureRedirect: '/login' }),
-  (req, res) => {
+  (req, res, err) => {
+    console.log(err);
     res.redirect('/');
   });
 
@@ -200,93 +201,115 @@ app.get('/profile', isLoggedIn(), (req, res) => {
     res.redirect('/user/' + req.user.userID);
 });
 
-
-app.get('/:prompt/create', isLoggedIn(),(req, res) => {
+app.get('/:prompt/create', (req, res) => {
   const slug = req.params.prompt;
   Prompt.findOne({'slug': slug}, (err, prompt, count) => {
-      res.render('create', {title: prompt.title, user: req.user});
+      res.render('create', {title: prompt.title});
   });
 });
 
-app.post('/:prompt/create', isLoggedIn(), (req, res) => {
+app.post('/:prompt/create', (req, res) => {
+    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const htmlBody = req.body.htmlBody;
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
-      //create the poem object and save it
-      //use _id (created by mongo) instead of userID (via Facebook)
-      const poem = new Poem({
-        'authorID' : req.user._id,
-        'username': req.user.name,
-        'prompt'   : prompt.title,
-        'body': htmlBody,
-        'likes': 0
-      });
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(prompt);
+        console.log('found the prompt!')
 
-      poem.save((err) => {
-        //save poem into prompts database
-        prompt.poems.push(poem._id);
-        prompt.save(err => {
-          console.log('successfully saved poem into prompts databse!');
-        })
+        //create the poem object and save it
+        const poem = new Poem({
+          'user' : 'This is a test user',
+          'prompt'   : 'This is a test prompt.',
+          'body': htmlBody,
+          'likes': 0
+        });
 
-        //save poem into user's database too
-        User.findOne({'userID': req.user.userID}, (err, user) => {
-          user.poems.push(poem._id);
-          user.save(err => {
-            console.log('successfuly saved poem into user database!');
-          })
-        })
+        poem.save((err) => {
+          if (err) {
+            res.render('error', {message: err});
+          } else {
+            //save poem into prompts database
+            prompt.poems.push(poem._id);
+            prompt.save(err => {
+              console.log('new set of poems:');
+              console.log(prompt);
+              console.log('successfully saved poem!');
+            })
+          }  
+        });
+      }
 
-        //show 'success' or 'failed' message
-        //should redirect to the prompt page
-        //this should actually wait til the above stuff is done... ??
-        res.redirect(`/${promptSlug}`); 
-      });
+      //show 'success' or 'failed' message
+      //should redirect to the prompt page
+      res.redirect(`/${promptSlug}`);
     })
 });
 
-app.get('/:prompt/:poem/delete', isLoggedIn(), (req, res) => {
+app.get('/:prompt/:poem/delete', (req, res) => {
+    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
 
     Poem.findByIdAndRemove(poemID, (err, poem) => {
-      if (err) {
-        res.render('error', {message: 'Unable to delete poem.'})
+      if (!err) {
+        console.log('success!');
       }
     });
 
     Prompt.findOne({'slug': promptSlug}, (err, prompt, count) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(prompt);
+        console.log('found the prompt!');
 
-      const index = prompt.poems.indexOf(poemID);
-      if (index > -1) {
-        prompt.poems.splice(index, 1);
+        const index = prompt.poems.indexOf(poemID);
+        if (index > -1) {
+          prompt.poems.splice(index, 1);
+        }
+
+        prompt.save(err => {
+          console.log('new set of poems after deleting:');
+          console.log(prompt);
+        })
       }
-
-      prompt.save(err => {
-        res.redirect('/' + promptSlug);
-      })
+      //show 'success' or 'failed' message
+      res.redirect('/' + promptSlug);
     });
 });
 
-app.get('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
+app.get('/:prompt/:poem/edit', (req, res) => {
+    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
 
     Poem.findOne({'_id': poemID}, (err, poem) => {
-      res.render('edit', {originalBody: poem.body, user: req.user, title: poem.prompt});
+      if (err) {
+        res.render(err);
+      } else {
+        console.log('success!');
+        console.log(poem);
+        res.render('edit', {'originalBody': poem.body});
+      }
     });
 });
 
-app.post('/:prompt/:poem/edit', isLoggedIn(), (req, res) => {
+app.post('/:prompt/:poem/edit', (req, res) => {
+    //should be /:prompt/create
     const promptSlug = req.params.prompt;
     const poemID = req.params.poem;
     const htmlBody = req.body.htmlBody;
 
     Poem.findByIdAndUpdate(poemID, {'body': htmlBody }, (err, poem) => {
+      console.log(err, poem);
       res.redirect(`/${promptSlug}`);
     })
 });
+
 
 //getting the prompt page, and populating the poems that respond to that prompt
 app.get('/:prompt', (req, res) => {
