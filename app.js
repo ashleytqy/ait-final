@@ -24,9 +24,9 @@ const User = mongoose.model("User");
 passport.use(
   new Strategy(
     {
-      clientID: process.env.CLIENT_ID_DEV,
-      clientSecret: process.env.CLIENT_SECRET_DEV,
-      callbackURL: "/login/facebook/return"
+      clientID: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      callbackURL: "https://boiling-meadow-69361.herokuapp.com/login/facebook/return"
     },
     (accessToken, refreshToken, profile, cb) => {
       //save profile to database
