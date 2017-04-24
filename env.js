@@ -1,4 +1,6 @@
 process.env['CLIENT_ID'] = "203275700129678"
 process.env['CLIENT_SECRET'] = "b2b8ba0fcb7ff627750ee79d64c5f3bd"
+process.env['CLIENT_ID_DEV'] = "281497248974189"
+process.env['CLIENT_SECRET_DEV'] = "94d9834cfc54898a2a634c8bcd282418"
 process.env['MONGO_USERNAME'] = "ashleytqy"
 process.env['MONGO_PASSWORD'] = "password123"

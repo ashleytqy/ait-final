@@ -22,6 +22,7 @@ function enableDragging() {
 
 
 function getAuthor() {
+    console.log('getting author..')
     const req = new XMLHttpRequest();
     const url = 'https://crossorigin.me/http://poetrydb.org/author';
     req.open('GET', url, true);
