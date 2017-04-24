@@ -4,6 +4,7 @@ const URLSlugs = require('mongoose-url-slugs');
 require('./env');
 
 const PoemSchema = new Schema({
+    fbID: {type: String, trim: true},
     authorID: {type: Schema.Types.ObjectId, ref: 'User'},
     username: {type: String, default: '', trim: true}, 
     prompt: {},

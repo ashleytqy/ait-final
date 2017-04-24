@@ -24,9 +24,9 @@ const User = mongoose.model("User");
 passport.use(
   new Strategy(
     {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "https://boiling-meadow-69361.herokuapp.com/login/facebook/return"
+      clientID: process.env.CLIENT_ID_DEV,
+      clientSecret: process.env.CLIENT_SECRET_DEV,
+      callbackURL: "/login/facebook/return"
     },
     (accessToken, refreshToken, profile, cb) => {
       //save profile to database
@@ -221,6 +221,7 @@ app.post('/:prompt/create', isLoggedIn(), (req, res) => {
       //create the poem object and save it
       //use _id (created by mongo) instead of userID (via Facebook)
       const poem = new Poem({
+        'fbID': req.user.userID,
         'authorID' : req.user._id,
         'username': req.user.name,
         'prompt'   : prompt.title,
@@ -316,9 +317,11 @@ app.get('/:prompt', (req, res) => {
                   } else {
                     poem.canModify = false;
                   }
+                  console.log('FB ID is ' + poem.fbID);
+                  console.log(poem);
                 })
               }  
-              res.render('prompt', { slug: promptSlug, title: prompt.title, 'poems': prompt.poems, user: req.user}); 
+              res.render('prompt', { slug: promptSlug, title: prompt.title, poems: prompt.poems, user: req.user}); 
             });
     }
   })

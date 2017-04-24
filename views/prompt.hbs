@@ -12,7 +12,7 @@
             {{{poem.body}}}
         </p>
       </div>
-		<h1 class="f4 bg-near-black white mv0 pv2 ph3">by {{poem.username}}</h1>
+		<h1 class="f4 bg-near-black white mv0 pv2 ph3">by <a class="link gold hover-pink" href="/user/{{poem.fbID}}">{{poem.username}}</a></h1>
     {{#if canModify}}
       <a class="link b hover-red no-underline black dib ph2 pv1" href="{{../slug}}/{{poem._id}}/delete">delete</a>
       <a class="link b hover-light-purple no-underline black dib ph2 pv1" href="{{../slug}}/{{poem._id}}/edit">edit</a>
