@@ -26,7 +26,7 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "https://boiling-meadow-69361.herokuapp.com/auth/facebook/callback"
+      callbackURL: "https://boiling-meadow-69361.herokuapp.com/login/facebook/return"
     },
     (accessToken, refreshToken, profile, cb) => {
       //save profile to database
