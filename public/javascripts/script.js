@@ -6,7 +6,7 @@ function main() {
 
 function getGif() {
     const req = new XMLHttpRequest();
-    const url = 'http://api.giphy.com/v1/gifs/search?q=congrats&api_key=dc6zaTOxFJmzC';
+    const url = 'https://api.giphy.com/v1/gifs/search?q=congrats&api_key=dc6zaTOxFJmzC';
     req.open('GET', url, true);
 
     req.addEventListener('load', function() {
