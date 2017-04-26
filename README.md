@@ -1,4 +1,4 @@
-# 🌸 wallflower 🌼
+# 🌸 pppoems 🌼
 
 ## Overview
 
@@ -90,9 +90,10 @@ Page for a specific `User`
     * use `filter` to filter users with most poems
 * (2 points) minimum 2 x mongoose schemas
 * (9 points) stability / security
-    * simple validation on user input to prevent application from crashing
-    * doesn't allow user input to be displayed unescaped directly on page
     * pages that require authentication cannot be accessed without authentication
+        * [create poem page redirects to login page](https://boiling-meadow-69361.herokuapp.com/write-a-poem-that-is-a-riddle/create)
+        * [profile page redirects to login page](https://boiling-meadow-69361.herokuapp.com/profile)
+
 * (5 points) originality
     * is not mostly based on existing homework
     majority of code is not from online tutorial

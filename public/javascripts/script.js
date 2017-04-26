@@ -1,6 +1,24 @@
 function main() {
   enableDragging();
   getAuthor();
+  getGif();
+}
+
+function getGif() {
+    const req = new XMLHttpRequest();
+    const url = 'http://api.giphy.com/v1/gifs/search?q=congrats&api_key=dc6zaTOxFJmzC';
+    req.open('GET', url, true);
+
+    req.addEventListener('load', function() {
+      if (req.status >= 200 && req.status < 400) {
+        const response = JSON.parse(req.responseText);
+        const index = getRandomInt(0, response.data.length);
+        const gif = response.data[index].images.original.url;
+        document.getElementById("gif").src = gif;
+      }
+    })
+
+    req.send();
 }
 
 function enableDragging() {
@@ -22,7 +40,7 @@ function enableDragging() {
 
 
 function getAuthor() {
-    console.log('getting author..')
+    console.log('getting author.. please wait...')
     const req = new XMLHttpRequest();
     const url = 'https://crossorigin.me/http://poetrydb.org/author';
     req.open('GET', url, true);
